@@ -11,6 +11,7 @@ import {
 } from "../store/slices/borrowSlice";
 import ReturnBookPopup from "../popups/ReturnBookPopup";
 import Header from "../layout/Header";
+import BorrowDetailsPopup from "../popups/BorrowDetailsPopup";
 
 const Catalog = () => {
   const dispatch = useDispatch();
@@ -21,6 +22,7 @@ const Catalog = () => {
   );
 
   const [filter, setFilter] = useState("borrowed");
+  const [selectedBorrow, setSelectedBorrow] = useState(null);
 
   const formatDateAndTime = (timeStamp) => {
     const date = new Date(timeStamp);
@@ -126,6 +128,8 @@ const Catalog = () => {
                   <tr
                     key={index}
                     className={(index + 1) % 2 === 0 ? "bg-gray-50" : ""}
+                    onClick={() => setSelectedBorrow(book)}
+                    style={{ cursor: 'pointer' }}
                   >
                     <td className="px-4 py-2">{index + 1}</td>
                     <td className="px-4 py-2">{book?.user.name}</td>
@@ -140,9 +144,12 @@ const Catalog = () => {
                         <FaSquareCheck className=" w-6 h-6" />
                       ) : (
                         <PiKeyReturnBold
-                          onClick={() =>
-                            openReturnBookPopup(book.book, book?.user.email)
-                          }
+                          onClick={e => {
+                            e.stopPropagation();
+                            // Use book.book._id if available, else book.book
+                            const bookId = book.book?._id || book.book;
+                            openReturnBookPopup(bookId, book?.user.email);
+                          }}
                           className=" w-6 h-6"
                         />
                       )}
@@ -159,6 +166,9 @@ const Catalog = () => {
         )}
       </main>
       {returnBookPopup && <ReturnBookPopup bookId={borrowedBookId} email={email}/>}
+      {selectedBorrow && (
+        <BorrowDetailsPopup borrow={selectedBorrow} onClose={() => setSelectedBorrow(null)} />
+      )}
     </>
   );
 };

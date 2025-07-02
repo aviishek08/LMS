@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Fuse from "fuse.js";
-import { BookA, NotebookPen, Trash2 } from "lucide-react";
+import { BookA, NotebookPen, Trash2, Check } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   toggleAddBookPopup,
@@ -51,6 +51,8 @@ const BookManagement = () => {
     dispatch(toggleRecordBookPopup());
   };
 
+  const [returnedBookId, setReturnedBookId] = useState(null);
+
   useEffect(() => {
     if (message || borrowSliceMessage) {
       toast.success(message || borrowSliceMessage);
@@ -74,22 +76,49 @@ const BookManagement = () => {
     borrowSliceMessage,
   ]);
   const [searchedKeyword, setSearchedKeyword] = useState("");
+  const [genreFilter, setGenreFilter] = useState("");
+  const [sortByAuthorAsc, setSortByAuthorAsc] = useState(true);
+  const [sortByTitleAsc, setSortByTitleAsc] = useState(true);
   const handleSearch = (e) => {
     setSearchedKeyword(e.target.value.toLowerCase());
   };
 
+  // Get unique genres for filter dropdown (flatten array)
+  const uniqueGenres = Array.from(
+    new Set(
+      books
+        .flatMap((book) => (Array.isArray(book.genre) ? book.genre : [book.genre]))
+        .filter(Boolean)
+    )
+  );
+
   const fuse = new Fuse(books, {
-    keys: ["title", "author"], // Specify the fields you want to search
-    includeScore: true, // Optional: to include the score of the match in the result
-    threshold: 0.3, // Adjust the threshold for fuzziness (lower is stricter)
+    keys: ["title", "author"],
+    includeScore: true,
+    threshold: 0.3,
   });
 
-  // const searchedBooks = books.filter((book) =>
-  //   book.title.toLowerCase().includes(searchedKeyword)
-  // );
-  const searchedBooks = searchedKeyword
-    ? fuse.search(searchedKeyword).map((result) => result.item) // Map the results back to the books
+  let searchedBooks = searchedKeyword
+    ? fuse.search(searchedKeyword).map((result) => result.item)
     : books;
+  if (genreFilter) {
+    searchedBooks = searchedBooks.filter((book) =>
+      Array.isArray(book.genre) ? book.genre.includes(genreFilter) : book.genre === genreFilter
+    );
+  }
+  // Sort by title or author if requested
+  if (sortByTitleAsc !== null) {
+    searchedBooks = [...searchedBooks].sort((a, b) => {
+      if (!sortByTitleAsc) return 0;
+      return a.title.localeCompare(b.title);
+    });
+  }
+  if (sortByAuthorAsc !== null) {
+    searchedBooks = [...searchedBooks].sort((a, b) => {
+      if (!sortByAuthorAsc) return 0;
+      return a.author.localeCompare(b.author);
+    });
+  }
 
   return (
     <>
@@ -117,6 +146,18 @@ const BookManagement = () => {
               value={searchedKeyword}
               onChange={handleSearch}
             />
+            <select
+              className="w-full sm:w-52 border p-2 border-gray-300 rounded-md"
+              value={genreFilter}
+              onChange={(e) => setGenreFilter(e.target.value)}
+            >
+              <option value="">All Genres</option>
+              {uniqueGenres.map((genre) => (
+                <option key={genre} value={genre}>
+                  {genre}
+                </option>
+              ))}
+            </select>
           </div>
         </header>
 
@@ -127,8 +168,23 @@ const BookManagement = () => {
               <thead>
                 <tr className="bg-gray-200">
                   <th className="px-4 py-2 text-left">ID</th>
-                  <th className="px-4 py-2 text-left">Name</th>
-                  <th className="px-4 py-2 text-left">Author</th>
+                  <th className="px-4 py-2 text-left">
+                    <button
+                      className="font-semibold hover:underline"
+                      onClick={() => setSortByTitleAsc((asc) => !asc)}
+                    >
+                      Name {sortByTitleAsc ? '▲' : '▼'}
+                    </button>
+                  </th>
+                  <th className="px-4 py-2 text-left">
+                    <button
+                      className="font-semibold hover:underline"
+                      onClick={() => setSortByAuthorAsc((asc) => !asc)}
+                    >
+                      Author {sortByAuthorAsc ? '▲' : '▼'}
+                    </button>
+                  </th>
+                  <th className="px-4 py-2 text-left">Genres</th>
                   {isAuthenticated && user?.role === "Admin" && (
                     <th className="px-4 py-2 text-left">Quantity</th>
                   )}
@@ -179,6 +235,7 @@ const BookManagement = () => {
                     <td className="px-4 py-2">{index + 1}</td>
                     <td className="px-4 py-2">{book.title}</td>
                     <td className="px-4 py-2">{book.author}</td>
+                    <td className="px-4 py-2">{Array.isArray(book.genre) ? book.genre.join(', ') : book.genre}</td>
                     {isAuthenticated && user?.role === "Admin" && (
                       <td className="px-4 py-2">{book.quantity}</td>
                     )}
@@ -192,10 +249,17 @@ const BookManagement = () => {
                           onClick={() => openReadPopup(book._id)}
                           className="cursor-pointer"
                         />
-                        <NotebookPen
-                          onClick={() => openRecordBookPopup(book._id)}
-                          className="cursor-pointer"
-                        />
+                        {returnedBookId === book._id ? (
+                          <Check className="text-green-600 cursor-pointer" />
+                        ) : (
+                          <NotebookPen
+                            onClick={() => {
+                              openRecordBookPopup(book._id);
+                              setReturnedBookId(book._id);
+                            }}
+                            className="cursor-pointer"
+                          />
+                        )}
                         <Trash2
                           onClick={() => {
                             dispatch(toggleDeleteBookPopup(book._id));

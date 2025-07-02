@@ -19,6 +19,7 @@ import {
   ArcElement,
 } from "chart.js";
 import logo from "../assets/black-logo.png";
+import { fetchUserBorrowedBooks } from "../store/slices/borrowSlice";
 
 ChartJS.register(
   CategoryScale,
@@ -38,6 +39,11 @@ const UserDashboard = () => {
 
   const [totalBorrowedBooks, setTotalBorrowedBooks] = useState(0);
   const [totalReturnedBooks, setTotalReturnedBooks] = useState(0);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchUserBorrowedBooks());
+  }, [dispatch]);
 
   useEffect(() => {
     let numberOfTotalBorrowedBooks = userBorrowedBooks.filter(

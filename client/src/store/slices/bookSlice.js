@@ -107,7 +107,6 @@ export const deleteBook = (id) => async (dispatch) => {
   }
 };
 
-
 export const updateBookDetails = (id, updatedData) => async (dispatch) => {
   dispatch(bookSlice.actions.addBookRequest());
   try {
@@ -127,6 +126,19 @@ export const updateBookDetails = (id, updatedData) => async (dispatch) => {
     dispatch(fetchAllBooks());
   } catch (err) {
     dispatch(bookSlice.actions.addBookFailed(err.response.data.message));
+  }
+};
+
+export const rateBook = (bookId, rating) => async (dispatch) => {
+  try {
+    await axios.post(
+      `http://localhost:4000/api/v1/book/${bookId}/rate`,
+      { rating },
+      { withCredentials: true, headers: { "Content-Type": "application/json" } }
+    );
+    dispatch(fetchAllBooks()); // Refresh books to get updated ratings
+  } catch (err) {
+    // Optionally handle error
   }
 };
 

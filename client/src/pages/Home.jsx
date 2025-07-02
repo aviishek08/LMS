@@ -9,6 +9,7 @@ import BookManagement from "../components/BookManagement";
 import Catalog from "../components/Catalog";
 import MyBorrowedBooks from "../components/MyBorrowedBooks";
 import Users from "../components/Users";
+import Recommendations from "../components/Recommendations";
 
 const Home = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
@@ -59,7 +60,10 @@ const Home = () => {
               break;
               case "My Borrowed Books":
                     return <MyBorrowedBooks/> 
-                    break;       
+                    break;  
+                    case "Recommendations":
+                      return <Recommendations />
+                      break;      
           default:
             return user?.role === "User" ? (
               <UserDashboard/>
@@ -79,4 +83,3 @@ const Home = () => {
 };
 
 export default Home;
- 

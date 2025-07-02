@@ -18,6 +18,9 @@ import {
 import logo from "../assets/black-logo.png";
 import { useDispatch, useSelector } from "react-redux";
 import Header from "../layout/Header";
+import { fetchAllUsers } from "../store/slices/userSlice";
+import { fetchAllBooks } from "../store/slices/bookSlice";
+import { fetchAllBorrowedBooks } from "../store/slices/borrowSlice";
 
 ChartJS.register(
   CategoryScale,
@@ -43,6 +46,14 @@ const AdminDashboard = () => {
   const [totalBooks, setTotalBooks] = useState((books && books.length) || 0);
   const [totalBorrowedBooks, setTotalBorrowedBooks] = useState(0);
   const [totalReturnedBooks, setTotalReturnedBooks] = useState(0);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchAllUsers());
+    dispatch(fetchAllBooks());
+    dispatch(fetchAllBorrowedBooks());
+  }, [dispatch]);
 
   useEffect(() => {
     let numberOfUsers = users.filter((user) => user.role === "User");

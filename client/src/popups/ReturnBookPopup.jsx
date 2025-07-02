@@ -1,24 +1,37 @@
 import React from "react";
 import { useDispatch } from "react-redux";
-import { returnBook } from "../store/slices/borrowSlice";
+import { returnBook, fetchAllBorrowedBooks } from "../store/slices/borrowSlice";
 import { toggleReturnBookPopup } from "../store/slices/popUpSlice";
 import { toast } from "react-toastify";
 
 const ReturnBookPopup = ({ bookId, email }) => {
   const dispatch = useDispatch();
-  // const handleReturnBook = (e) => {
-  //   e.preventDefault();
-  //   dispatch(returnBook(email, bookId));
-  //   dispatch(toggleReturnBookPopup());
-  // };
   const handleReturnBook = async (e) => {
     e.preventDefault();
     try {
-      await dispatch(returnBook(email, bookId));
-      dispatch(toggleReturnBookPopup()); // Close the popup if successful
-      toast("Book returned successfully.");
+      // Call the API directly to get the message
+      const res = await fetch(
+        `http://localhost:4000/api/v1/borrow/return-borrowed-book/${bookId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ email }),
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        toast(data.message);
+        dispatch(fetchAllBorrowedBooks()); // Refresh the list immediately
+        dispatch(toggleReturnBookPopup());
+        dispatch(returnBook(email, bookId)); // update redux state
+      } else {
+        toast.error(data.message || "Failed to return book.");
+      }
     } catch (error) {
-      console.error("Failed to return the book:", error.message);
+      toast.error("Failed to return the book.");
     }
   };
 

@@ -83,9 +83,14 @@ const {loading, error, message, user, isAuthenticated,} = useSelector(
         {isAuthenticated && user?.role === "User" && (
           <>
           <button className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2" 
-        onClick={()=> setSelectedComponent("My Borrowed Books")}>
+        onClick={()=> setSelectedComponent("My Borrowed Books")}> 
           <img src={catalogIcon} alt="icon"/>
           <span>My Borrowed Books</span>
+        </button>
+          <button className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2" 
+        onClick={()=> setSelectedComponent("Recommendations")}> 
+          <img src={bookIcon} alt="icon"/>
+          <span>Recommendations</span>
         </button>
           </>
         )}

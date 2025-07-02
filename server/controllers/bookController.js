@@ -4,8 +4,8 @@ import {User} from "../models/userModel.js"
 import ErrorHandler from "../middlewares/errorMiddlewares.js";
 
 export const addBook = catchAsyncErrors(async(req, res, next)=>{
-    const {title, author, description, price, quantity} = req.body;
-    if(!title || !author || !description || !price || !quantity){
+    const {title, author, description, price, quantity, genre} = req.body;
+    if(!title || !author || !description || !price || !quantity || !genre){
         return next(new ErrorHandler("Please fill up all the fields.", 400));
     }
     const book = await Book.create({
@@ -14,6 +14,7 @@ export const addBook = catchAsyncErrors(async(req, res, next)=>{
         description, 
         price, 
         quantity,
+        genre,
     });
     res.status(201).json({
         success: true,
@@ -66,4 +67,27 @@ export const updateBookDetails = catchAsyncErrors(async (req, res, next) => {
     message: "Book details updated successfully.",
     book,
   });
+});
+
+// Add or update a user's rating for a book
+export const rateBook = catchAsyncErrors(async (req, res, next) => {
+  const { id } = req.params; // book id
+  const { rating } = req.body;
+  const userId = req.user._id;
+  if (!rating || rating < 1 || rating > 5) {
+    return next(new ErrorHandler("Rating must be between 1 and 5.", 400));
+  }
+  const book = await Book.findById(id);
+  if (!book) {
+    return next(new ErrorHandler("Book not found.", 404));
+  }
+  // Check if user has already rated
+  const existing = book.ratings.find(r => r.user.toString() === userId.toString());
+  if (existing) {
+    existing.rating = rating;
+  } else {
+    book.ratings.push({ user: userId, rating });
+  }
+  await book.save();
+  res.status(200).json({ success: true, message: "Rating submitted.", ratings: book.ratings });
 });
